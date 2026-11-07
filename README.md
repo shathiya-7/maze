@@ -13,9 +13,11 @@ An academic demonstration of AI search algorithms.
 2. `npm install`
 3. `npm run dev`
 
+## Deploy on Vercel
+Import the repository into Vercel and set the project root to the repository root, where `vercel.json` is located. The Vercel services configuration routes `/api/*` to the backend and all other paths to the frontend.
+
 ## AI Theory
 - **BFS**: Guarantees shortest path in unweighted grids.
 - **DFS**: Deep exploration, non-optimal path.
 - **UCS**: Lowest total cost path (handles mud/water).
 - **A***: Heuristic-driven (Manhattan distance) for efficiency.
-

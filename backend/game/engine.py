@@ -1,8 +1,15 @@
-from ..ai.astar import astar
-from ..ai.bfs import bfs
-from ..ai.dfs import dfs
-from ..ai.ucs import ucs
-from .scoring import ScoringSystem
+if __package__ == "game":
+    from ai.astar import astar
+    from ai.bfs import bfs
+    from ai.dfs import dfs
+    from ai.ucs import ucs
+    from game.scoring import ScoringSystem
+else:
+    from ..ai.astar import astar
+    from ..ai.bfs import bfs
+    from ..ai.dfs import dfs
+    from ..ai.ucs import ucs
+    from .scoring import ScoringSystem
 
 
 class GameEngine:

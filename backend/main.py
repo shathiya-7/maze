@@ -1,19 +1,17 @@
-import sys
-from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import List, Tuple
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-if __package__ in (None, ""):
-    project_root = Path(__file__).resolve().parent.parent
-    if str(project_root) not in sys.path:
-        sys.path.insert(0, str(project_root))
-
-from backend.game.engine import GameEngine
-from backend.maze.generator import MazeGenerator
-from backend.maze.terrain import get_terrain_costs
+if __package__:
+    from .game.engine import GameEngine
+    from .maze.generator import MazeGenerator
+    from .maze.terrain import get_terrain_costs
+else:
+    from game.engine import GameEngine
+    from maze.generator import MazeGenerator
+    from maze.terrain import get_terrain_costs
 
 app = FastAPI(title="AI Maze Solver API")
 

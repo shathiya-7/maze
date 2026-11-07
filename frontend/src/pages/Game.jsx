@@ -11,13 +11,29 @@ const Game = () => {
   const [status, setStatus] = useState("IDLE"); // IDLE, SEARCHING, FOUND, PATHING
   const [metrics, setMetrics] = useState({ nodes: 0, cost: 0, time: 0 });
   const [speed, setSpeed] = useState(50);
+  const [error, setError] = useState("");
 
   const generate = async () => {
-    const data = await mazeService.generateMaze();
-    setGrid(data.grid);
-    setVisualState({});
-    setRobotPos([0, 0]);
-    setStatus("IDLE");
+    setError("");
+    setStatus("GENERATING");
+    setGrid([]);
+    setRobotPos(null);
+
+    try {
+      const data = await mazeService.generateMaze();
+      if (!Array.isArray(data?.grid) || data.grid.length === 0 || !Array.isArray(data.grid[0])) {
+        throw new Error("The maze API returned an invalid grid.");
+      }
+
+      setGrid(data.grid);
+      setVisualState({});
+      setRobotPos([0, 0]);
+      setStatus("IDLE");
+    } catch (requestError) {
+      const detail = requestError?.response?.data?.detail;
+      setError(detail || requestError.message || "Could not generate the maze.");
+      setStatus("ERROR");
+    }
   };
 
   useEffect(() => { generate(); }, []);
@@ -27,16 +43,25 @@ const Game = () => {
       return;
     }
 
+    setError("");
     setStatus("SEARCHING");
     const start = [0, 0];
     const goal = [grid.length - 1, grid[0].length - 1];
 
-    const result = await mazeService.solveMaze({
-      algorithm: algo,
-      grid: grid,
-      start: start,
-      goal: goal
-    });
+    let result;
+    try {
+      result = await mazeService.solveMaze({
+        algorithm: algo,
+        grid: grid,
+        start: start,
+        goal: goal
+      });
+    } catch (requestError) {
+      const detail = requestError?.response?.data?.detail;
+      setError(detail || requestError.message || "Could not solve the maze.");
+      setStatus("ERROR");
+      return;
+    }
 
     if (result.path.length === 0) {
       setStatus("FAILED");
@@ -83,6 +108,11 @@ const Game = () => {
         <div className="lg:col-span-2 flex flex-col items-center gap-6">
           <h1 className="text-4xl font-bold tracking-tighter text-cyan-400">AI MAZE LABORATORY</h1>
           <MazeGrid grid={grid} robotPos={robotPos} visualState={visualState} />
+          {error && (
+            <div role="alert" className="w-full rounded-lg border border-rose-700 bg-rose-950/60 p-4 text-sm text-rose-200">
+              {error}
+            </div>
+          )}
           
           <div className="flex gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 w-full justify-center">
             <select 
@@ -100,13 +130,13 @@ const Game = () => {
 
             <button 
               onClick={runAI} 
-              disabled={status === "SEARCHING"}
+              disabled={!grid.length || status === "SEARCHING" || status === "GENERATING"}
               className="bg-cyan-600 hover:bg-cyan-500 px-6 py-2 rounded font-bold transition-colors disabled:opacity-50"
             >
               START AI
             </button>
-            <button onClick={generate} className="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded font-bold transition-colors">
-              RESET
+            <button onClick={generate} disabled={status === "GENERATING"} className="bg-slate-700 hover:bg-slate-600 px-6 py-2 rounded font-bold transition-colors disabled:opacity-50">
+              {status === "GENERATING" ? "LOADING..." : "RESET"}
             </button>
           </div>
         </div>
